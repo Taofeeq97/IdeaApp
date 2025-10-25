@@ -1,0 +1,20 @@
+{
+  "name": "idea-drop-api",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "ideadrop backend api",
+  "main": "sever.js",
+  "scripts": {
+    "start": "node server",
+    "dev": "node --watch server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Taofeeq",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "mongoose": "^8.19.2"
+  }
+}
