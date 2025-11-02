@@ -16,7 +16,8 @@ connectDb();
 
 
 const allowedOrigins = [
-    'http://localhost:3000'
+    'http://localhost:3000',
+    'https://idea-drop-frontend-theta.vercel.app/'
 ]
 app.use(cors({
   origin: allowedOrigins, 
