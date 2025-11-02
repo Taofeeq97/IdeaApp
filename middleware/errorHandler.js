@@ -2,7 +2,6 @@
 const errorHandler = (err, req, res, next) => {
   console.error(err.stack);
   
-  // Check if headers have already been sent
   if (res.headersSent) {
     return next(err);
   }

@@ -2,6 +2,8 @@ import express from 'express'
 import Idea from '../models/idea.js'
 import mongoose from 'mongoose'
 
+import { protect } from '../middleware/authmiddleware.js'
+
 const router = express.Router()
 
 router.get('/', async (req, res, next) => {
@@ -26,12 +28,12 @@ router.get('/:id', async (req, res, next) => {
         const { id } = req.params
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            res.status='404'
+            res.status(404)
             throw new Error ('Idea Not Founs')
         }
         const idea = await Idea.findById(id)
         if (!idea) {
-            res.status='404'
+            res.status(404)
             throw new Error ('Idea Not Founs')
         }
         res.json(idea);
@@ -41,9 +43,9 @@ router.get('/:id', async (req, res, next) => {
 })
 
 
-router.post('/', async (req, res, next) => {
+router.post('/',protect, async (req, res, next) => {
     try {
-        const {title, description, summary, tags} = req.body
+        const {title, description, summary, tags} = req.body || {};
         if (!title?.trim() || !description?.trim() || !summary?.trim()) {
             res.status(400)
             throw new Error('Title , description and summary are required')
@@ -58,7 +60,8 @@ router.post('/', async (req, res, next) => {
                 .filter(Boolean)
                 : Array.isArray(tags)
                 ? tags 
-                : []
+                : [],
+            user: req.user._id
         });
         const savedIdea = await newIdea.save()
         res.status(201).json(savedIdea)
@@ -69,17 +72,29 @@ router.post('/', async (req, res, next) => {
 })
 
 
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', protect, async (req, res, next) => {
     try {
         const { id } = req.params
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            res.status='404'
+            res.status(404)
             throw new Error ('Idea Not Founs')
         }
-        const idea = await Idea.findByIdAndDelete(id)
+        const idea = await Idea.findById(id)
         if (!idea) {
-            res.status='404'
+            res.status(401)
+            throw new Error('Idea not found')
+        }
+
+        if (idea.user.toString() !== req.user._id.toString()) {
+            res.status(403)
+            throw new Error('unauthorized')
+        }
+
+        await idea.deleteOne()
+
+        if (!idea) {
+            res.status(404)
             throw new Error ('Idea Not Founs')
         }
         res.json({message: "Idea deleted successfully"});
@@ -88,7 +103,7 @@ router.delete('/:id', async (req, res, next) => {
     }
 })
 
-router.put('/:id', async(req, res, next) => {
+router.put('/:id', protect, async(req, res, next) => {
     console.log(req.body)
     try {
         const { id } = req.params
@@ -96,8 +111,21 @@ router.put('/:id', async(req, res, next) => {
             res.status(404)
             throw new Error('Idea Not Found')
         }
+
+        const idea = await Idea.findById(id)
+
+        if (!idea) {
+            res.status(401)
+            throw new Error('Idea not found')
+        }
+
+        if (idea.user.toString() !== req.user._id.toString()) {
+            res.status(403)
+            throw new Error('unauthorized')
+        }
+
         
-        const { title, summary, description, tags } = req.body;
+        const { title, summary, description, tags } = req.body || {};
         if (!title?.trim() || !description?.trim() || !summary?.trim()) {
             res.status(400)
             throw new Error('Title, description and summary are required')
